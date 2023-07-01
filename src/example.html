@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Movie Search App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f2f2f2;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .search-form {
+      margin-bottom: 20px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    .search-btn {
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    .movie-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .movie-item {
+      background-color: #fff;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .movie-title {
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+
+    .movie-year {
+      font-size: 14px;
+      color: #888;
+    }
+
+    .movie-poster {
+      max-width: 100%;
+      height: auto;
+      margin-bottom: 10px;
+    }
+
+    .movie-details {
+      display: none;
+      padding: 10px;
+      background-color: #f9f9f9;
+    }
+
+    .movie-details p {
+      margin: 0;
+    }
+
+    .show-details-btn {
+      display: block;
+      margin-top: 10px;
+      padding: 5px 10px;
+      background-color: #007bff;
+      color: #fff;
+      text-align: center;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Movie Search App</h1>
+
+    <form class="search-form">
+      <input type="text" class="search-input" placeholder="Search movies...">
+      <button type="submit" class="search-btn">Search</button>
+    </form>
+
+    <ul class="movie-list"></ul>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      $('.search-form').submit(function(event) {
+        event.preventDefault();
+        var searchTerm = $('.search-input').val();
+        searchMovies(searchTerm);
+      });
+
+      function searchMovies(searchTerm) {
+        var url = 'http://www.omdbapi.com/?apikey=YOUR_API_KEY&s=' + searchTerm;
+
+        $.ajax({
+          url: url,
+          method: 'GET',
+          success: function(response) {
+            if (response.Response === 'True') {
+              var movies = response.Search;
+              $('.movie-list').empty();
+
+              $.each(movies, function(index, movie) {
+                var $movieItem = $('<li class="movie-item"></li>');
+                var $movieTitle = $('<h2 class="movie-title"></h2>').text(movie.Title);
+                var $movieYear = $('<p class="movie-year"></p>').text(movie.Year);
+                var $moviePoster = $('<img class="movie-poster">').attr('src', movie.Poster);
+
+                $movieItem.append($movieTitle, $movieYear, $moviePoster);
+                $('.movie-list').append($movieItem);
+
+                $movieItem.click(function() {
+                  getMovieDetails(movie.imdbID);
+                });
+              });
+            } else {
+              alert('No movies found!');
+            }
+          },
+          error: function() {
+            alert('Error searching movies!');
+          }
+        });
+      }
+
+      function getMovieDetails(movieId) {
+        var url = 'http://www.omdbapi.com/?apikey=YOUR_API_KEY&i=' + movieId;
+
+        $.ajax({
+          url: url,
+          method: 'GET',
+          success: function(response) {
+            var $movieItem = $('.movie-item').filter(function() {
+              return $(this).find('.movie-title').text() === response.Title;
+            });
+
+            var $movieDetails = $('<div class="movie-details"></div>');
+            var $moviePlot = $('<p></p>').text(response.Plot);
+            var $movieDirector = $('<p></p>').text('Director: ' + response.Director);
+            var $movieActors = $('<p></p>').text('Actors: ' + response.Actors);
+            var $showDetailsBtn = $('<a href="#" class="show-details-btn">Show Details</a>');
+
+            $movieDetails.append($moviePlot, $movieDirector, $movieActors, $showDetailsBtn);
+            $movieItem.append($movieDetails);
+
+            $showDetailsBtn.click(function(event) {
+              event.preventDefault();
+              $movieDetails.slideToggle();
+            });
+          },
+          error: function() {
+            alert('Error getting movie details!');
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
